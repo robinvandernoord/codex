@@ -21,9 +21,10 @@ impl ChatWidget {
                 );
             }
             ServerRequest::FileChangeRequestApproval { params, .. } => {
+                let changes = self.file_change_preview_for_approval(&params.turn_id, &params.item_id);
                 self.on_apply_patch_approval_request(
                     id,
-                    patch_approval_request_from_params(params),
+                    patch_approval_request_from_params(params, changes),
                 );
             }
             ServerRequest::McpServerElicitationRequest { request_id, params } => {

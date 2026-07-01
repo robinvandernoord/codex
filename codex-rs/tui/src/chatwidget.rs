@@ -580,6 +580,7 @@ pub(crate) struct ChatWidget {
     running_commands: HashMap<String, RunningCommand>,
     collab_agent_metadata: HashMap<ThreadId, AgentMetadata>,
     pending_collab_spawn_requests: HashMap<String, multi_agents::SpawnRequestSummary>,
+    pending_file_change_previews: HashMap<(String, String), HashMap<PathBuf, FileChange>>,
     suppressed_exec_calls: HashSet<String>,
     skills_all: Vec<ProtocolSkillMetadata>,
     skills_initial_state: Option<HashMap<AbsolutePathBuf, bool>>,
@@ -882,11 +883,12 @@ fn exec_approval_request_from_params(
 
 fn patch_approval_request_from_params(
     params: FileChangeRequestApprovalParams,
+    changes: HashMap<PathBuf, FileChange>,
 ) -> ApplyPatchApprovalRequestEvent {
     ApplyPatchApprovalRequestEvent {
         call_id: params.item_id,
         turn_id: params.turn_id,
-        changes: HashMap::new(),
+        changes,
         reason: params.reason,
         grant_root: params.grant_root,
     }

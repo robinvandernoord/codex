@@ -234,6 +234,7 @@ impl ChatWidget {
         notification: TurnCompletedNotification,
         replay_kind: Option<ReplayKind>,
     ) {
+        self.clear_file_change_previews_for_turn(notification.turn.id.as_str());
         // User-message dedupe only suppresses the app-server echo of a prompt
         // this TUI already rendered locally. Once that turn ends, another
         // client can submit the same text and it still needs its own user cell.
@@ -286,8 +287,10 @@ impl ChatWidget {
     ) {
         match notification.item {
             item @ ThreadItem::CommandExecution { .. } => self.on_command_execution_started(item),
-            ThreadItem::FileChange { id: _, changes, .. } => {
-                self.on_patch_apply_begin(file_update_changes_to_display(changes));
+            ThreadItem::FileChange { id, changes, .. } => {
+                let changes = file_update_changes_to_display(changes);
+                self.remember_file_change_preview(&notification.turn_id, &id, changes.clone());
+                self.on_patch_apply_begin(changes);
             }
             item @ ThreadItem::McpToolCall { .. } => self.on_mcp_tool_call_started(item),
             ThreadItem::WebSearch { id, .. } => {

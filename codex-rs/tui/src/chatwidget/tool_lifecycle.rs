@@ -7,6 +7,42 @@ use super::*;
 use codex_utils_path_uri::LegacyAppPathString;
 
 impl ChatWidget {
+    pub(super) fn remember_file_change_preview(
+        &mut self,
+        turn_id: &str,
+        item_id: &str,
+        changes: HashMap<PathBuf, FileChange>,
+    ) {
+        self.pending_file_change_previews
+            .insert((turn_id.to_string(), item_id.to_string()), changes);
+    }
+
+    pub(super) fn file_change_preview_for_approval(
+        &self,
+        turn_id: &str,
+        item_id: &str,
+    ) -> HashMap<PathBuf, FileChange> {
+        self.pending_file_change_previews
+            .get(&(turn_id.to_string(), item_id.to_string()))
+            .cloned()
+            .or_else(|| {
+                turn_id.is_empty().then(|| {
+                    self.pending_file_change_previews
+                        .iter()
+                        .find_map(|((_, pending_item_id), changes)| {
+                            (pending_item_id == item_id).then_some(changes.clone())
+                        })
+                        .unwrap_or_default()
+                })
+            })
+            .unwrap_or_default()
+    }
+
+    pub(super) fn clear_file_change_previews_for_turn(&mut self, turn_id: &str) {
+        self.pending_file_change_previews
+            .retain(|(pending_turn_id, _), _| pending_turn_id != turn_id);
+    }
+
     pub(super) fn on_patch_apply_begin(&mut self, changes: HashMap<PathBuf, FileChange>) {
         self.record_visible_turn_activity();
         self.add_to_history(history_cell::new_patch_event(changes, &self.config.cwd));

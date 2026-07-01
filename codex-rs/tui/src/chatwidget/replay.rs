@@ -130,9 +130,16 @@ impl ChatWidget {
             } => self.on_command_execution_started(item),
             item @ ThreadItem::CommandExecution { .. } => self.on_command_execution_completed(item),
             ThreadItem::FileChange {
+                id,
+                changes,
                 status: codex_app_server_protocol::PatchApplyStatus::InProgress,
-                ..
-            } => {}
+            } => {
+                self.remember_file_change_preview(
+                    &turn_id,
+                    &id,
+                    file_update_changes_to_display(changes),
+                );
+            }
             item @ ThreadItem::FileChange { .. } => self.on_file_change_completed(item),
             item @ ThreadItem::McpToolCall {
                 status: codex_app_server_protocol::McpToolCallStatus::InProgress,
